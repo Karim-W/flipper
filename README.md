@@ -17,6 +17,24 @@ flipper -command "echo hello world"
 flipper -ex "vendor" -command "echo hello world"
 ```
 
+#### Exclude multiple directories
+
+```bash
+flipper -ex "vendor" -ex "node_modules" -command "echo hello world"
+```
+
+### Exclude an extension
+
+```bash
+flipper -ex-ext "go" -command "echo hello world"
+```
+
+#### Exclude multiple extensions
+
+```bash
+flipper -ex-ext "go" -ex-ext "js" -command "echo hello world"
+```
+
 ## Installation
 
 ```bash

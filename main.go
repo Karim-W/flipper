@@ -24,10 +24,14 @@ func (i *arrayFlags) Set(value string) error {
 	return nil
 }
 
-var myFlags arrayFlags
+var (
+	myFlags            arrayFlags
+	excludedExtensions arrayFlags
+)
 
 func main() {
 	flag.Var(&myFlags, "ex", "exclude a directory")
+	flag.Var(&excludedExtensions, "ex-ext", "exclude a file extension")
 	flag.Parse()
 	fmt.Println("flags: ", myFlags)
 	if *commandFlag == "" {
@@ -95,6 +99,15 @@ func isPathExcluded(path string) bool {
 	return false
 }
 
+func isExtensionExcluded(path string) bool {
+	for _, ex := range excludedExtensions {
+		if strings.HasSuffix(path, ex) {
+			return true
+		}
+	}
+	return false
+}
+
 // recursivleyAddWatchers adds a watcher for the path and all subdirectories
 func recursivleyAddWatchers(watcher *fsnotify.Watcher, path string) {
 	fmt.Println("adding watcher for ", path)
@@ -102,10 +115,7 @@ func recursivleyAddWatchers(watcher *fsnotify.Watcher, path string) {
 		log.Println("excluding ", path)
 		return
 	}
-	err := watcher.Add(path)
-	if err != nil {
-		log.Fatal(err)
-	}
+	// err := watcher.Add(path)
 
 	f, err := os.Open(path)
 	if err != nil {
@@ -119,8 +129,19 @@ func recursivleyAddWatchers(watcher *fsnotify.Watcher, path string) {
 	}
 
 	for _, file := range files {
+		if isExtensionExcluded(file.Name()) {
+			log.Println("excluding ", file.Name())
+			continue
+		}
 		if file.IsDir() {
 			recursivleyAddWatchers(watcher, path+"/"+file.Name())
+		} else {
+			fmt.Println("adding watcher for ", path+"/"+file.Name())
+			err = watcher.Add(path + "/" + file.Name())
+			if err != nil {
+				log.Fatal(err)
+			}
+
 		}
 	}
 }
