@@ -5,8 +5,16 @@ im sure there are better tools out there but i dont care
 
 ## Usage
 
+### General Usage
+
 ```bash
 flipper -command "echo hello world"
+```
+
+### Exclude a directory
+
+```bash
+flipper -ex "vendor" -command "echo hello world"
 ```
 
 ## Installation

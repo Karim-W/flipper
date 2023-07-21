@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"os"
 	"os/exec"
@@ -12,8 +13,23 @@ import (
 
 var commandFlag = flag.String("command", "", "command to run when a file changes")
 
+type arrayFlags []string
+
+func (i *arrayFlags) String() string {
+	return "my string representation"
+}
+
+func (i *arrayFlags) Set(value string) error {
+	*i = append(*i, value)
+	return nil
+}
+
+var myFlags arrayFlags
+
 func main() {
+	flag.Var(&myFlags, "ex", "exclude a directory")
 	flag.Parse()
+	fmt.Println("flags: ", myFlags)
 	if *commandFlag == "" {
 		log.Fatal("command flag must be set")
 	}
@@ -69,7 +85,23 @@ func main() {
 	<-make(chan struct{})
 }
 
+// isPathExcluded returns true if the path is excluded
+func isPathExcluded(path string) bool {
+	for _, ex := range myFlags {
+		if strings.Contains(path, ex) {
+			return true
+		}
+	}
+	return false
+}
+
+// recursivleyAddWatchers adds a watcher for the path and all subdirectories
 func recursivleyAddWatchers(watcher *fsnotify.Watcher, path string) {
+	fmt.Println("adding watcher for ", path)
+	if isPathExcluded(path) {
+		log.Println("excluding ", path)
+		return
+	}
 	err := watcher.Add(path)
 	if err != nil {
 		log.Fatal(err)
